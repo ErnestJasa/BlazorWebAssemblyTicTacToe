@@ -1,6 +1,7 @@
 using BlazorTicTacToe.Client.Pages;
 using BlazorTicTacToe.Components;
 using BlazorTicTacToe.Hubs;
+using Microsoft.AspNetCore.ResponseCompression;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +11,15 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddSignalR();
 
+builder.Services.AddResponseCompression(opts =>
+{
+    opts.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(
+        ["application/octet-stream"]);
+});
+
 var app = builder.Build();
+
+app.UseResponseCompression();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

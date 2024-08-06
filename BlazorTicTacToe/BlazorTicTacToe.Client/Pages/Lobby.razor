@@ -28,7 +28,7 @@ else
 
 
 <h2>Chat: </h2>
-<input type="text" @bind="message" />
+<input type="text" @bind="messageInput" />
 <button @onclick="SendChatMessage">Send</button>
 <ul>
     @foreach (var message in Messages)
@@ -49,7 +49,7 @@ else
     private HubConnection? hubConnection;
     public string? myPlayerId;
     private string playerName = string.Empty;
-    private string message = string.Empty;
+    private string messageInput = string.Empty;
     private string currentRoomName = string.Empty;
     private GameRoom? currentRoom;
     private List<GameRoom> rooms = new();
@@ -107,12 +107,12 @@ else
     }
     private async Task SendChatMessage()
     {
-        if (hubConnection is null || playerName == string.Empty || message == string.Empty)
+        if (hubConnection is null || playerName == string.Empty || messageInput == string.Empty)
         {
             return;
         }
 
-        await hubConnection.InvokeAsync("MessageSender", myPlayerId, playerName, message);
+        await hubConnection.InvokeAsync("MessageSender", myPlayerId, playerName, messageInput);
     }
 
 }
