@@ -1,0 +1,138 @@
+﻿@if (CurrentRoom is not null)
+{
+    <h3>@CurrentRoom.RoomName</h3>
+
+    if (CurrentRoom.Players.Count() < 2)
+    {
+        <h4>Waiting for another player to join...</h4>
+    }
+
+    if (!CurrentRoom.Game.GameStarted && CurrentRoom.Game.PlayerXId != MyPlayerId && CurrentRoom.Players.Count() == 2)
+    {
+        <h4>Waiting for the player to start the game...</h4>
+    }
+
+    @if (CurrentRoom.Game.GameOver && !CurrentRoom.Game.IsDraw)
+    {
+        <h3>Game over! Winner: @CurrentRoom.Game.Winner</h3>
+    }
+    @if (CurrentRoom.Game.GameOver && CurrentRoom.Game.IsDraw)
+    {
+        <h3>Game over! It's a draw</h3>
+    }
+
+
+    if ((!CurrentRoom.Game.GameStarted || CurrentRoom.Game.GameOver) &&
+        CurrentRoom.RoomMasterId == MyPlayerId && CurrentRoom.Players.Count() == 2)
+    {
+        <button @onclick="StartGame">Start Game</button>
+    }
+
+    if (CurrentRoom.Game.GameStarted && !CurrentRoom.Game.GameOver)
+    {
+        <h4>Its @CurrentRoom.Game.CurrentPlayerSymbol's turn</h4>
+
+    }
+    if (CurrentRoom.Game.GameStarted)
+    {
+        <Board GameBoard="CurrentRoom.Game.Board" MakeMove="async (row, col) => await MakeMove(row, col)"/>
+    }
+    @if (!IsMyTurn() && !CurrentRoom.Game.GameOver && CurrentRoom.Game.GameStarted)
+    {
+        <p>Waiting for other player to make a move</p>
+    }
+
+    <h4>Players in room:</h4>
+    <p>X player id - @CurrentRoom.Game.PlayerXId</p>
+    <p>O player id - @CurrentRoom.Game.PlayerOId</p>
+    foreach (var player in CurrentRoom.Players)
+    {
+        <h5>
+            @player.Name (@player.Symbol) ID - @player.ConnectionId
+            @if (ImRoomMaster())
+            {
+                if (player.ConnectionId != MyPlayerId)
+                {
+                    <button @onclick="()=> ChangeRoomMaster(player.ConnectionId)">Give Master</button>
+                }
+            }
+        </h5>
+    }
+}
+@code {
+
+    [CascadingParameter]
+    public HubConnection? HubConnection { get; set; }
+    [Parameter]
+    public GameRoom? CurrentRoom { get; set; }
+    [Parameter]
+    public string? MyPlayerId { get; set; } = "asdf";
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (CurrentRoom is null || HubConnection is null || HubConnection.ConnectionId is null)
+        {
+            return;
+        }
+
+        // MyPlayerId = HubConnection.ConnectionId;
+
+        HubConnection.On<Player>("PlayerJoined", player =>
+        {
+            CurrentRoom.Players.Add(player);
+            StateHasChanged();
+        });
+
+        HubConnection.On<GameRoom>(ConnectionStrings.UpdateGame, serverRoom =>
+        {
+            CurrentRoom = serverRoom;
+            StateHasChanged();
+        });
+        HubConnection.On<string>(ConnectionStrings.ChangeMaster, newMaster =>
+        {
+            CurrentRoom.RoomMasterId = newMaster;
+            StateHasChanged();
+        });
+    }
+
+    async Task StartGame()
+    {
+        if (HubConnection is null || CurrentRoom is null)
+        {
+            return;
+        }
+        await HubConnection.InvokeAsync("StartGame", CurrentRoom.RoomId);
+    }
+
+    private async Task MakeMove(int row, int col)
+    {
+        if (IsMyTurn()
+            && CurrentRoom is not null
+            && CurrentRoom.Game.GameStarted
+            && !CurrentRoom.Game.GameOver
+            && HubConnection is not null)
+        {
+            await HubConnection.InvokeAsync("MakeMove", CurrentRoom.RoomId, row, col, MyPlayerId);
+        }
+    }
+    private bool IsMyTurn()
+    {
+        if (CurrentRoom is not null)
+        {
+            return MyPlayerId == CurrentRoom.Game.CurrentPlayerId;
+        }
+        return false;
+    }
+    private async Task ChangeRoomMaster(string playerId)
+    {
+        if (HubConnection is null)
+        {
+            return;
+        }
+        await HubConnection.InvokeAsync("ChangeRoomMaster", CurrentRoom?.RoomId, playerId);
+    }
+    private bool ImRoomMaster()
+    {
+        return CurrentRoom?.RoomMasterId == MyPlayerId;
+    }
+}

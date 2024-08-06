@@ -1,0 +1,21 @@
+﻿<table class="tic-tac-toe">
+
+    @for (int row = 0; row < 3; row++)
+    {
+        <tr>
+            @for (int col = 0; col < 3; col++)
+            {
+                int r = row;
+                int c = col;
+                <td @onclick="()=> MakeMove(r, c)">@GameBoard[r][c]</td>
+            }
+        </tr>
+    }
+</table> 
+@code {
+    [Parameter]
+    public List<List<string>>? GameBoard { get; set; }
+    [Parameter]
+    public Action<int, int> MakeMove { get; set; }
+
+}

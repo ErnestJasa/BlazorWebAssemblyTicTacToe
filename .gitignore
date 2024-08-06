@@ -1,0 +1,167 @@
+# Ignore build outputs
+bin/
+obj/
+
+# User-specific files
+*.user
+*.userosscache
+*.suo
+*.userprefs
+
+# Mono auto generated files
+mono_crash.*
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# VS Code directories
+.vscode/
+.vscode-test/
+
+# Local History for Visual Studio
+.localhistory
+
+# NCrunch
+.ncrunch*
+.ncrunchsolution
+
+# Mac OS specific files
+.DS_Store
+
+# Rider
+.idea/
+*.sln.iml
+
+# JetBrains Rider specific files
+.idea/
+.idea/*
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# Files built by Visual Studio
+.vs/
+*.rsuser
+*.rsg
+
+# Backup & report files from converting an old project file
+_UpgradeReport_Files/
+Backup*/
+UpgradeLog*.XML
+UpgradeLog*.htm
+
+# SQL Server files
+*.mdf
+*.ldf
+*.ndf
+
+# Business Intelligence projects
+*.rdl.data
+*.bim.layout
+*.bim_*.settings
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+
+# Lock file
+*.lock
+
+# Windows Event Log
+*.evtx
+
+# Windows Prefetch files
+*.pf
+
+# Web server publish directory
+wwwroot/
+
+# Node.js dependencies
+node_modules/
+
+# Logs
+logs/
+*.log
+
+# Npm debug log
+npm-debug.log*
+
+# Yarn Integrity file
+.yarn-integrity
+
+# Environment Variables
+.env
+
+# Azure Pipelines
+.azure-pipelines/
+
+# Local History for Visual Studio
+.localhistory/
+
+# Rider
+.idea/
+.idea/*
+
+# Resharper
+_ReSharper.Caches/
+
+# Coverlet Coverage Tool
+coverage.opencover.xml
+coverage.cobertura.xml
+
+# StyleCop
+stylecop.json
+
+# DotNetTool
+.local.dotnet-tools
+
+# Paket
+.paket/paket.exe
+paket-files/
+
+# ASP.NET Core SignalR
+logs
+wwwroot/lib
+
+# Ignore .NET Core generated files
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ASP.NET MVC/Razor Scaffolding
+ScaffoldingReadMe.txt
+
+# Docker
+.dockerignore
+
+# Ignore IDE settings files
+.idea/
+*.sln.ide
+
+# Ignore build results
+*.dll
+*.pdb
+*.exe
+
+# Ignore publish directory
+publish/
+out/
+
+# Ignore secrets
+secrets.json
+
+# Ignore configuration files
+appsettings.Development.json
