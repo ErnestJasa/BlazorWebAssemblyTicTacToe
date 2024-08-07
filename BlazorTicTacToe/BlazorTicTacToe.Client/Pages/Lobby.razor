@@ -2,58 +2,47 @@
 @inject NavigationManager NavigationManager
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 
+<secton class="lobby-main">
 
-<h3>Lobby</h3>
+    <h3 class="text-red-700">Lobby</h3>
 
-@if (currentRoom is null)
-{
-    <input @bind="playerName" placeholder="Your name" />
-    <input @bind="currentRoomName" placeholder="Room name" />
-    <button @onclick="CreateRoom">Create</button>
-
-    <h3>Rooms: </h3>
-    <ul>
-        @foreach (var room in rooms)
-        {
-            <li>@room.RoomName <button @onclick="()=> JoinRoom(room.RoomId)">Join</button></li>
-        }
-    </ul>
-}
-else
-{
-    <CascadingValue Value="hubConnection">
-        <Room CurrentRoom="currentRoom" MyPlayerId="@myPlayerId" />
-    </CascadingValue>
-}
-
-
-<h2>Chat: </h2>
-<input type="text" @bind="messageInput" />
-<button @onclick="SendChatMessage">Send</button>
-<ul>
-    @foreach (var message in Messages)
+    @if (currentRoom is null)
     {
-        <li>
-            <p>
-                @message.SenderName
-            </p>
-            <p>
-                @message.MessageContent
-            </p>
-        </li>
+        <input @bind="playerName" placeholder="Your name" />
+        <input @bind="currentRoomName" placeholder="Room name" />
+        <button @onclick="CreateRoom">Create</button>
+        if (currentRoom is null && rooms.Count() >= 4)
+        {
+            <h1>Currently a maximum number of rooms was reached, please wait for some to free up.</h1>
+        }
+        <h3>Rooms: </h3>
+        <ul>
+            @foreach (var room in rooms)
+            {
+                <li>@room.RoomName (@room.Players.Count()/2) <button @onclick="()=> JoinRoom(room.RoomId)">Join</button></li>
+            }
+        </ul>
+        <Chat HubConnection="hubConnection" MyPlayerId="@myPlayerId" MyPlayerName="@playerName" />
+
     }
-</ul>
+    else
+    {
+        <CascadingValue Value="hubConnection">
+            <Room CurrentRoom="currentRoom" MyPlayerId="@myPlayerId" MyPlayerName="@playerName" />
+        </CascadingValue>
+    }
+</secton>
+
 
 
 @code {
     private HubConnection? hubConnection;
     public string? myPlayerId;
     private string playerName = string.Empty;
-    private string messageInput = string.Empty;
     private string currentRoomName = string.Empty;
-    private GameRoom? currentRoom;
+    private GameRoom? currentRoom = null;
     private List<GameRoom> rooms = new();
-    private List<ChatMessage> Messages = new();
+
     protected override async Task OnInitializedAsync()
     {
         hubConnection = new HubConnectionBuilder()
@@ -66,13 +55,6 @@ else
             rooms = roomList;
             StateHasChanged();
         });
-        hubConnection.On<ChatMessage>(ConnectionStrings.ReceiveMessage, message =>
-        {
-            Console.WriteLine(message.SenderName + " " + message.MessageContent);
-            Messages.Add(message);
-            StateHasChanged();
-        });
-
 
         await hubConnection.StartAsync();
         myPlayerId = hubConnection.ConnectionId;
@@ -104,15 +86,6 @@ else
         {
             Console.WriteLine("Room is full or does not exist");
         }
-    }
-    private async Task SendChatMessage()
-    {
-        if (hubConnection is null || playerName == string.Empty || messageInput == string.Empty)
-        {
-            return;
-        }
-
-        await hubConnection.InvokeAsync("MessageSender", myPlayerId, playerName, messageInput);
     }
 
 }

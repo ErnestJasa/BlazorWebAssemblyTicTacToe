@@ -1,0 +1,100 @@
+﻿
+<h2>Chat: </h2>
+<input type="text" @bind="messageInput" />
+<button @onclick="SendChatMessage">Send</button>
+<section>
+    @for (int i = 0; i < Messages.Count(); i++)
+    {
+        var message = Messages[i];
+        if (i == 0)
+        {
+            <div>
+                <h4>
+                    @message.SenderName
+                </h4>
+            </div>
+            <div>
+                <p>
+                    @message.MessageContent
+                </p>
+            </div>
+
+        }
+        else if (Messages?[i - 1].SenderId != message.SenderId)
+        {
+            <div>
+                <h4>
+                    @message.SenderName
+                </h4>
+            </div>
+            <div>
+                <p>
+                    @message.MessageContent
+                </p>
+            </div>
+        }
+        else
+        {
+            <p>@message.MessageContent</p>
+        }
+    }
+    @*  @foreach (var message in Messages)
+    {
+    if (Messages[Messages.Count()-2].SenderId != message.SenderId)
+    {
+    <li>
+    <p>
+    @message.SenderName
+    </p>
+    <p>
+    @message.MessageContent
+    </p>
+    </li>
+    }
+    else
+    {
+    <p>@message.MessageContent</p>
+    }
+    }*@
+</section>
+
+@code {
+    [Parameter]
+    public HubConnection? HubConnection { get; set; }
+    [Parameter]
+    public string MyPlayerName { get; set; } = string.Empty;
+    [Parameter]
+    public string MyPlayerId { get; set; } = string.Empty;
+    [Parameter]
+    public string? RoomId { get; set; } = "Lobby";
+
+    private string messageInput = string.Empty;
+
+    private List<ChatMessage> Messages = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (HubConnection is null)
+        {
+            Console.WriteLine("hubconnection is null at chat component");
+            return;
+        }
+        HubConnection.On<List<ChatMessage>>(ConnectionStrings.ReceiveMessage, newMessages =>
+        {
+            // Messages.Add(message);
+            Messages = newMessages;
+            StateHasChanged();
+        });
+    }
+
+    private async Task SendChatMessage()
+    {
+        if (HubConnection is null || MyPlayerName == string.Empty || messageInput == string.Empty)
+        {
+            return;
+        }
+
+        await HubConnection.InvokeAsync("MessageSender", MyPlayerId, MyPlayerName, messageInput, RoomId);
+
+    }
+}

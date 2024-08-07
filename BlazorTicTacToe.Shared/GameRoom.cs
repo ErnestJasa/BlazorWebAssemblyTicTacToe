@@ -6,15 +6,23 @@ using System.Threading.Tasks;
 
 namespace BlazorTicTacToe.Shared
 {
-    public class GameRoom(string roomId, string roomName)
+    public class GameRoom
     {
-        public string RoomId { get; set; } = roomId;
-        public string RoomName { get; set; } = roomName;
+        public string RoomId { get; set; } 
+        public string RoomName { get; set; } 
         public string RoomMasterId { get; set; }
-
         public List<Player> Players { get; set; } = new();
         public TicTacToeGame Game { get; set; } = new();
 
+        public GameRoom(string roomId, string roomName)
+        {
+            RoomId = roomId;
+            RoomName = roomName;
+        }
+        public GameRoom()
+        {
+                
+        }
         public bool TryAddPlayer(Player player)
         {
             if (Players.Count() < 2 && !Players.Any(p => p.ConnectionId == player.ConnectionId))
@@ -55,6 +63,7 @@ namespace BlazorTicTacToe.Shared
                 return player;
             }
             return null;
+
         }
 
         public void ChangeRoomMaster(string playerId)

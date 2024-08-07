@@ -45,6 +45,9 @@
     <h4>Players in room:</h4>
     <p>X player id - @CurrentRoom.Game.PlayerXId</p>
     <p>O player id - @CurrentRoom.Game.PlayerOId</p>
+
+    <h1>number of players in room - @CurrentRoom.Players.Count()</h1>
+
     foreach (var player in CurrentRoom.Players)
     {
         <h5>
@@ -58,15 +61,17 @@
             }
         </h5>
     }
+    <Chat HubConnection="HubConnection" MyPlayerId="@MyPlayerId" MyPlayerName="@MyPlayerName" RoomId="@CurrentRoom.RoomId" />
 }
 @code {
-
     [CascadingParameter]
     public HubConnection? HubConnection { get; set; }
     [Parameter]
     public GameRoom? CurrentRoom { get; set; }
     [Parameter]
-    public string? MyPlayerId { get; set; } = "asdf";
+    public string? MyPlayerId { get; set; } = string.Empty;
+    [Parameter]
+    public string? MyPlayerName { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -75,18 +80,16 @@
             return;
         }
 
-        // MyPlayerId = HubConnection.ConnectionId;
-
-        HubConnection.On<Player>("PlayerJoined", player =>
+        HubConnection.On<Player>(ConnectionStrings.PlayerJoined, player =>
         {
             CurrentRoom.Players.Add(player);
             StateHasChanged();
         });
 
-        HubConnection.On<GameRoom>(ConnectionStrings.UpdateGame, serverRoom =>
+        HubConnection.On<GameRoom>(ConnectionStrings.UpdateGame,async (serverRoom) =>
         {
             CurrentRoom = serverRoom;
-            StateHasChanged();
+           await InvokeAsync(StateHasChanged);
         });
         HubConnection.On<string>(ConnectionStrings.ChangeMaster, newMaster =>
         {

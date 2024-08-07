@@ -6,11 +6,23 @@ using System.Threading.Tasks;
 
 namespace BlazorTicTacToe.Shared
 {
-    public class ChatMessage(string senderId, string senderName, string message)
+    public class ChatMessage
     {
-        public string ChatMessageId { get; set; } = new Guid().ToString();
-        public string? SenderId { get; set; } = senderId;
-        public string? SenderName { get; set; } = senderName;
-        public string? MessageContent { get; set; } = message;
+        public string ChatMessageId { get; set; } = Guid.NewGuid().ToString();
+        public string SenderId { get; set; }
+        public string SenderName { get; set; }
+        public string MessageContent { get; set; }
+        public DateTime SentDate { get; set; } = DateTime.UtcNow;
+
+        public ChatMessage(string senderId, string senderName, string message)
+        {
+            SenderId = senderId;
+            SenderName = senderName;
+            MessageContent = message;
+        }
+        public ChatMessage()
+        {
+            
+        }
     }
 }

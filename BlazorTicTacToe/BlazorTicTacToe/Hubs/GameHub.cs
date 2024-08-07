@@ -1,17 +1,39 @@
 ﻿using BlazorTicTacToe.Client.Components;
 using BlazorTicTacToe.Shared;
 using Microsoft.AspNetCore.SignalR;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Timers;
 
 namespace BlazorTicTacToe.Hubs
 {
     public class GameHub : Hub
     {
         private static readonly List<GameRoom> _rooms = new();
+        private static readonly Dictionary<string, List<ChatMessage>> _messagesInRooms = new Dictionary<string, List<ChatMessage>>()
+        {
+            { "Lobby", new List<ChatMessage>() }
+        };
+
         public override async Task OnConnectedAsync()
         {
             Console.WriteLine($"Player with Id '{Context.ConnectionId}' connected.");
 
-            await Clients.Caller.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r=>r.RoomName));
+            await Clients.Caller.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
+            var messageList = _messagesInRooms["Lobby"];
+            await Clients.Caller.SendAsync(ConnectionStrings.ReceiveMessage, messageList.OrderBy(x => x.SentDate));
+
+
+            Process currentProcess = Process.GetCurrentProcess();
+            long privateMemory = currentProcess.PrivateMemorySize64;
+            long workingSet = currentProcess.WorkingSet64;
+            long pagedMemory = currentProcess.PagedMemorySize64;
+            long virtualMemory = currentProcess.VirtualMemorySize64;
+
+            Console.WriteLine($"Private Memory: {privateMemory / 1024 / 1024} MB");
+            Console.WriteLine($"Working Set: {workingSet / 1024 / 1024} MB");
+            Console.WriteLine($"Paged Memory: {pagedMemory / 1024 / 1024} MB");
+            Console.WriteLine($"Virtual Memory: {virtualMemory / 1024 / 1024} MB");
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
@@ -19,7 +41,7 @@ namespace BlazorTicTacToe.Hubs
             var playerId = Context.ConnectionId;
             if (playerId is not null)
             {
-                var room = _rooms.FirstOrDefault(x => x.Players.Any(p=> p.ConnectionId == playerId));
+                var room = _rooms.FirstOrDefault(x => x.Players.Any(p => p.ConnectionId == playerId));
                 if (room is not null)
                 {
                     if (room.Players.Count() > 1)
@@ -31,18 +53,24 @@ namespace BlazorTicTacToe.Hubs
                             await Groups.RemoveFromGroupAsync(playerToRemove.ConnectionId, room.RoomId);
                             await Clients.Group(room.RoomId).SendAsync(ConnectionStrings.UpdateGame, room);
                         }
+
                     }
                     else
                     {
                         _rooms.Remove(room);
+                        await Clients.All.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
                     }
                 }
             }
             await base.OnDisconnectedAsync(exception);
         }
 
-        public async Task<GameRoom> CreateRoom(string roomName, string playerName)
+        public async Task<GameRoom?> CreateRoom(string roomName, string playerName)
         {
+            if (_rooms.Count() >= 4)
+            {
+                return null;
+            }
             var roomId = Guid.NewGuid().ToString();
             var room = new GameRoom(roomId, roomName);
             _rooms.Add(room);
@@ -51,7 +79,7 @@ namespace BlazorTicTacToe.Hubs
             room.TryAddPlayer(newPlayer);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-            await Clients.All.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r=>r.RoomName));  
+            await Clients.All.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
 
             return room;
         }
@@ -64,8 +92,13 @@ namespace BlazorTicTacToe.Hubs
                 var newPLayer = new Player(Context.ConnectionId, playerName);
                 if (room.TryAddPlayer(newPLayer))
                 {
+                    var messageList = _messagesInRooms[roomId];
                     await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
                     await Clients.Group(roomId).SendAsync(ConnectionStrings.PlayerJoined, newPLayer);
+                    if (messageList is not null)
+                    {
+                        await Clients.Caller.SendAsync(ConnectionStrings.ReceiveMessage, messageList.OrderBy(x => x.SentDate));
+                    }
 
                     return room;
                 }
@@ -86,7 +119,7 @@ namespace BlazorTicTacToe.Hubs
 
         public async Task StartGame(string roomId)
         {
-            var room = _rooms.FirstOrDefault(x=> x.RoomId == roomId);
+            var room = _rooms.FirstOrDefault(x => x.RoomId == roomId);
             if (room is not null)
             {
                 room.Game.StartGame();
@@ -97,8 +130,8 @@ namespace BlazorTicTacToe.Hubs
 
         public async Task MakeMove(string roomId, int row, int col, string playerId)
         {
-            var room = _rooms.FirstOrDefault(x=>x.RoomId == roomId);
-            if(room is not null && room.Game.MakeMove(row,col,playerId))
+            var room = _rooms.FirstOrDefault(x => x.RoomId == roomId);
+            if (room is not null && room.Game.MakeMove(row, col, playerId))
             {
                 room.Game.Winner = room.Game.CheckWinner();
                 room.Game.IsDraw = room.Game.CheckDraw() && string.IsNullOrEmpty(room.Game.Winner);
@@ -112,11 +145,35 @@ namespace BlazorTicTacToe.Hubs
             }
         }
 
-        public async Task MessageSender(string senderId, string senderName, string message)
+        public async Task MessageSender(string senderId, string senderName, string message, string roomId)
         {
-            var newChatmessage = new ChatMessage(senderId, senderName, message);
-            Console.WriteLine(newChatmessage?.SenderName + " " + newChatmessage?.MessageContent);
-            await Clients.All.SendAsync(ConnectionStrings.ReceiveMessage, newChatmessage);
+            ChatMessage newChatmessage = new ChatMessage(senderId, senderName, message);
+            Console.WriteLine(newChatmessage?.SenderName + " " + newChatmessage?.MessageContent + " " + roomId);
+
+            if (!_messagesInRooms.Keys.Contains(roomId))
+            {
+                _messagesInRooms.Add(roomId, new List<ChatMessage>());
+            }
+            var messageList = _messagesInRooms[roomId];
+            messageList = _messagesInRooms[roomId];
+
+            if (messageList is not null && newChatmessage is not null)
+            {
+                if (messageList.Count == 500)
+                {
+                    messageList.Remove(messageList[0]);
+                }
+                messageList.Add(newChatmessage);
+                if (roomId == "Lobby")
+                {
+                    await Clients.All.SendAsync(ConnectionStrings.ReceiveMessage, messageList);
+                }
+                else
+                {
+                    await Clients.Group(roomId).SendAsync(ConnectionStrings.ReceiveMessage, messageList.OrderBy(x => x.SentDate));
+                }
+            }
+
         }
     }
 }
