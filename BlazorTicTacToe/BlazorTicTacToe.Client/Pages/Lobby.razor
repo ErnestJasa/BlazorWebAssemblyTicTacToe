@@ -20,7 +20,7 @@
             <h3 class="text-xl text-center">Please enter your player name.</h3>
             <form class="flex mx-1 mt-3 text-lg ">
                 <input class="py-1 pl-2 bg-inherit peer focus:border-[#998C3A] focus:outline-none rounded-l-xl border border-black" @bind="PlayerName" placeholder="Player name..." />
-                <button class=" px-2 hover:bg-white/25 active:bg-white/25 peer-focus:border-[#998C3A] rounded-r-xl border border-black" @onclick="()=> _playerName = PlayerName" disabled=@(PlayerName.Trim() == string.Empty)>Set Name</button>
+                <button class=" px-2 hover:bg-white/25 active:bg-white/25 peer-focus:border-[#998C3A] rounded-r-xl border border-black" @onclick="SetName" disabled=@(PlayerName.Trim() == string.Empty)>Set Name</button>
             </form>
         </div>
     }
@@ -63,6 +63,7 @@
             </CascadingValue>
         }
     </div>
+    <Chat HubConnection="hubConnection" MyPlayerId="@myPlayerId" MyPlayerName="@_playerName" />
 </secton>
 
 
@@ -121,6 +122,15 @@
         {
             Console.WriteLine("Room is full or does not exist");
         }
+    }
+    private async Task SetName()
+    {
+        _playerName = PlayerName;
+        if (hubConnection is null)
+        {
+            return;
+        }
+        await hubConnection.InvokeAsync("ReceiveChat", "Lobby");
     }
 
 }

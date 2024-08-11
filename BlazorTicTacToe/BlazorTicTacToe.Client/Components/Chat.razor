@@ -81,7 +81,6 @@
         }
         HubConnection.On<List<ChatMessage>>(ConnectionStrings.ReceiveMessage, newMessages =>
         {
-            // Messages.Add(message);
             Messages = newMessages;
             StateHasChanged();
         });
