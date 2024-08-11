@@ -22,7 +22,7 @@ namespace BlazorTicTacToe.Hubs
             await Clients.Caller.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
             var messageList = _messagesInRooms["Lobby"];
             await Clients.Caller.SendAsync(ConnectionStrings.ReceiveMessage, messageList.OrderBy(x => x.SentDate));
-
+            await Groups.AddToGroupAsync(Context.ConnectionId,"Lobby");
 
             Process currentProcess = Process.GetCurrentProcess();
             long privateMemory = currentProcess.PrivateMemorySize64;
@@ -49,9 +49,12 @@ namespace BlazorTicTacToe.Hubs
                         var playerToRemove = room.TryRemovePlayer(playerId);
                         if (playerToRemove is not null)
                         {
+                            Console.WriteLine("Player disconnected " + playerId);
                             await Groups.RemoveFromGroupAsync(playerToRemove.ConnectionId, room.RoomId);
                             await Groups.RemoveFromGroupAsync(playerToRemove.ConnectionId, room.RoomId);
                             await Clients.Group(room.RoomId).SendAsync(ConnectionStrings.UpdateGame, room);
+                            //await Clients.AllExcept(room.Players[0].ConnectionId).SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
+                            await Clients.Group("Lobby").SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
                         }
 
                     }
@@ -60,6 +63,10 @@ namespace BlazorTicTacToe.Hubs
                         _rooms.Remove(room);
                         await Clients.All.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
                     }
+                }
+                else
+                {
+                    await Groups.RemoveFromGroupAsync(playerId, "Lobby");
                 }
             }
             await base.OnDisconnectedAsync(exception);
@@ -79,7 +86,8 @@ namespace BlazorTicTacToe.Hubs
             room.TryAddPlayer(newPlayer);
 
             await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
-            await Clients.All.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
+            await Groups.RemoveFromGroupAsync(Context.ConnectionId, "Lobby");
+            await Clients.Group("Lobby").SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
 
             return room;
         }
@@ -92,14 +100,17 @@ namespace BlazorTicTacToe.Hubs
                 var newPLayer = new Player(Context.ConnectionId, playerName);
                 if (room.TryAddPlayer(newPLayer))
                 {
-                    var messageList = _messagesInRooms[roomId];
+
+                    //await Clients.AllExcept(room.Players[0].ConnectionId, room.Players?[1].ConnectionId).SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
                     await Groups.AddToGroupAsync(Context.ConnectionId, roomId);
+                    await Groups.RemoveFromGroupAsync(Context.ConnectionId, "Lobby");
                     await Clients.Group(roomId).SendAsync(ConnectionStrings.PlayerJoined, newPLayer);
-                    if (messageList is not null)
+                    await Clients.Group("Lobby").SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
+                    if (_messagesInRooms.ContainsKey(roomId))
                     {
+                        var messageList = _messagesInRooms[roomId];
                         await Clients.Caller.SendAsync(ConnectionStrings.ReceiveMessage, messageList.OrderBy(x => x.SentDate));
                     }
-
                     return room;
                 }
             }
@@ -166,7 +177,7 @@ namespace BlazorTicTacToe.Hubs
                 messageList.Add(newChatmessage);
                 if (roomId == "Lobby")
                 {
-                    await Clients.All.SendAsync(ConnectionStrings.ReceiveMessage, messageList);
+                    await Clients.Group("Lobby").SendAsync(ConnectionStrings.ReceiveMessage, messageList);
                 }
                 else
                 {

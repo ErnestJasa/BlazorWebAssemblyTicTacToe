@@ -2,35 +2,67 @@
 @inject NavigationManager NavigationManager
 @rendermode @(new InteractiveWebAssemblyRenderMode(false))
 
-<secton class="lobby-main">
+@* npx tailwindcss -i .\BlazorTicTacToe\Styles\app.css -o .\BlazorTicTacToe\wwwroot\css\app.css --watch *@
+@* D:\BlazorTicTacToe\BlazorTicTacToe *@
 
-    <h3 class="text-red-700">Lobby</h3>
-
-    @if (currentRoom is null)
-    {
-        <input @bind="playerName" placeholder="Your name" />
-        <input @bind="currentRoomName" placeholder="Room name" />
-        <button @onclick="CreateRoom">Create</button>
-        if (currentRoom is null && rooms.Count() >= 4)
+<secton class="w-full h-full flex flex-col bg-[#2b3169] text-white">
+    <div class="flex mt-2 mx-1">
+        <h1 class=" text-3xl">Lobby</h1>
+        @if (_playerName != string.Empty && _playerName is not null)
         {
-            <h1>Currently a maximum number of rooms was reached, please wait for some to free up.</h1>
+            <h1 class="text-3xl ml-auto">Hi, @_playerName</h1>
         }
-        <h3>Rooms: </h3>
-        <ul>
-            @foreach (var room in rooms)
-            {
-                <li>@room.RoomName (@room.Players.Count()/2) <button @onclick="()=> JoinRoom(room.RoomId)">Join</button></li>
-            }
-        </ul>
-        <Chat HubConnection="hubConnection" MyPlayerId="@myPlayerId" MyPlayerName="@playerName" />
+    </div>
 
-    }
-    else
+    @if (_playerName == string.Empty || _playerName is null)
     {
-        <CascadingValue Value="hubConnection">
-            <Room CurrentRoom="currentRoom" MyPlayerId="@myPlayerId" MyPlayerName="@playerName" />
-        </CascadingValue>
+        <div class="mt-6 mx-1 mx-auto">
+            <h3 class="text-xl text-center">Please enter your player name.</h3>
+            <form class="flex mx-1 mt-3 text-lg ">
+                <input class="py-1 pl-2 bg-inherit peer focus:border-[#998C3A] focus:outline-none rounded-l-xl border border-black" @bind="PlayerName" placeholder="Player name..." />
+                <button class=" px-2 hover:bg-white/25 active:bg-white/25 peer-focus:border-[#998C3A] rounded-r-xl border border-black" @onclick="()=> _playerName = PlayerName" disabled=@(PlayerName.Trim() == string.Empty)>Set Name</button>
+            </form>
+        </div>
     }
+    <div class="w-full h-full flex flex-col justify-center gap-4">       
+        @if (currentRoom is null && _playerName != string.Empty && _playerName is not null)
+        {
+            <form class="text-lg flex" @onsubmit="CreateRoom">
+                <input class="p-2  bg-inherit peer focus:border-[#998C3A] focus:outline-none rounded-l-xl border border-black ml-2" @bind="currentRoomName" placeholder="Room name" />
+                <button type="submit" class="px-2 hover:bg-white/25 active:bg-white/25 peer-focus:border-[#998C3A] rounded-r-xl border border-black">Create</button>
+            </form>
+            if (currentRoom is null && rooms.Count() >= 4)
+            {
+                <h1>Currently a maximum number of rooms was reached, please wait for some to free up.</h1>
+            }
+            if (rooms.Count() > 0)
+            {
+                <div class=" mx-3">
+                    <h3 class="text-xl">Available Rooms: </h3>
+                    <ul class="mt-2">
+                        @foreach (var room in rooms)
+                        {
+                            <li class="flex">
+                                @room.RoomName <small class="ml-1 mt-[2px] opacity-60">(@room.Players.Count()/2)</small>
+                                @if (room.Players.Count() < 2)
+                                {
+                                    <button class="ml-auto mr-2" @onclick="()=> JoinRoom(room.RoomId)">Join</button>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </div>
+            }
+            <Chat HubConnection="hubConnection" MyPlayerId="@myPlayerId" MyPlayerName="@_playerName" />
+
+        }
+        else
+        {
+            <CascadingValue Value="hubConnection">
+                <Room CurrentRoom="currentRoom" MyPlayerId="@myPlayerId" MyPlayerName="@_playerName" />
+            </CascadingValue>
+        }
+    </div>
 </secton>
 
 
@@ -38,10 +70,11 @@
 @code {
     private HubConnection? hubConnection;
     public string? myPlayerId;
-    private string playerName = string.Empty;
+    private string _playerName = string.Empty;
     private string currentRoomName = string.Empty;
     private GameRoom? currentRoom = null;
     private List<GameRoom> rooms = new();
+    public string PlayerName { get; set; } = string.Empty;
 
     protected override async Task OnInitializedAsync()
     {
@@ -49,12 +82,14 @@
             .WithUrl(NavigationManager.ToAbsoluteUri("/gamehub"))
             .Build();
 
+
         hubConnection.On<List<GameRoom>>(ConnectionStrings.Rooms, roomList =>
         {
             Console.WriteLine($"Got rooms. Count = {roomList.Count()}");
             rooms = roomList;
             StateHasChanged();
         });
+
 
         await hubConnection.StartAsync();
         myPlayerId = hubConnection.ConnectionId;
@@ -66,7 +101,7 @@
         {
             return;
         }
-        currentRoom = await hubConnection.InvokeAsync<GameRoom>("CreateRoom", currentRoomName, playerName);
+        currentRoom = await hubConnection.InvokeAsync<GameRoom>("CreateRoom", currentRoomName, _playerName);
     }
 
     private async Task JoinRoom(string roomId)
@@ -76,7 +111,7 @@
             return;
         }
 
-        var joinedRoom = await hubConnection.InvokeAsync<GameRoom>("JoinRoom", roomId, playerName);
+        var joinedRoom = await hubConnection.InvokeAsync<GameRoom>("JoinRoom", roomId, _playerName);
 
         if (joinedRoom is not null)
         {
