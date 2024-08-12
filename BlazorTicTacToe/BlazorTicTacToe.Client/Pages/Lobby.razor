@@ -46,7 +46,7 @@
                                 @room.RoomName <small class="ml-1 mt-[2px] opacity-60">(@room.Players.Count()/2)</small>
                                 @if (room.Players.Count() < 2)
                                 {
-                                    <button class="ml-auto mr-2" @onclick="()=> JoinRoom(room.RoomId)">Join</button>
+                                    <button class="ml-auto mr-2 px-2 border border-black rounded-full hover:bg-white/[0.1]" @onclick="()=> JoinRoom(room.RoomId)">Join</button>
                                 }
                             </li>
                         }
@@ -63,7 +63,6 @@
             </CascadingValue>
         }
     </div>
-    <Chat HubConnection="hubConnection" MyPlayerId="@myPlayerId" MyPlayerName="@_playerName" />
 </secton>
 
 

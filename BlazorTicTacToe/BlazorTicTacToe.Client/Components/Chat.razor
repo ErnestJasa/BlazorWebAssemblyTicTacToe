@@ -1,62 +1,49 @@
 ﻿
-<h2>Chat: </h2>
-<input type="text" @bind="messageInput" />
-<button @onclick="SendChatMessage">Send</button>
-<section>
-    @for (int i = 0; i < Messages.Count(); i++)
+<article>
+    <h3 class="text-xl mx-3">Chat: </h3>
+    <form class="flex mt-2" @onsubmit="SendChatMessage">
+        <input class="p-2  bg-inherit peer focus:border-[#998C3A] focus:outline-none rounded-l-xl border border-black ml-2" type="text" @bind="messageInput" />
+        <button class="px-2 hover:bg-white/25 active:bg-white/25 peer-focus:border-[#998C3A] rounded-r-xl border border-black" type="submit">Send</button>
+    </form>
+    @if (Messages.Count() > 0)
     {
-        var message = Messages[i];
-        if (i == 0)
-        {
-            <div>
-                <h4>
-                    @message.SenderName
-                </h4>
-            </div>
-            <div>
-                <p>
-                    @message.MessageContent
-                </p>
-            </div>
+        <div class="mt-3 bg-white/[0.05] mx-2 rounded-lg shadow-lg border-t border-black rounded-t-lg shadow-black/[0.5] max-h-80 overflow-auto scrollbar-hide">
+            @for (int i = 0; i < Messages.Count(); i++)
+            {
+                var message = Messages[i];
+                if (i == 0)
+                {
+                    <div class=" flex flex-col border-x border-black  p-1">
+                        <h4 class="text-lg px-2 p-1 bg-black/[0.3] mr-auto rounded-xl">
+                            @message.SenderName
+                        </h4>
+                        <p class="ml-auto mr-1">
+                            @message.MessageContent
+                        </p>
+                    </div>
 
-        }
-        else if (Messages?[i - 1].SenderId != message.SenderId)
-        {
-            <div>
-                <h4>
-                    @message.SenderName
-                </h4>
-            </div>
-            <div>
-                <p>
-                    @message.MessageContent
-                </p>
-            </div>
-        }
-        else
-        {
-            <p>@message.MessageContent</p>
-        }
+                }
+                else if (Messages?[i - 1].SenderId != message.SenderId)
+                {
+                    <div class=" flex flex-col border-x border-t border-black  p-1">
+                        <h4 class="text-lg px-2 p-1 bg-black/[0.3] mr-auto rounded-xl">
+                            @message.SenderName
+                        </h4>
+                        <p class="ml-auto mr-1">
+                            @message.MessageContent
+                        </p>
+                    </div>
+                }
+                else
+                {
+                    <div class="flex p-1 border-x border-black">
+                        <p class="ml-auto mr-1">@message.MessageContent</p>
+                    </div>
+                }
+            }
+        </div>
     }
-    @*  @foreach (var message in Messages)
-    {
-    if (Messages[Messages.Count()-2].SenderId != message.SenderId)
-    {
-    <li>
-    <p>
-    @message.SenderName
-    </p>
-    <p>
-    @message.MessageContent
-    </p>
-    </li>
-    }
-    else
-    {
-    <p>@message.MessageContent</p>
-    }
-    }*@
-</section>
+</article>
 
 @code {
     [Parameter]
@@ -94,6 +81,7 @@
         }
 
         await HubConnection.InvokeAsync("MessageSender", MyPlayerId, MyPlayerName, messageInput, RoomId);
+        messageInput = string.Empty;
 
     }
 }

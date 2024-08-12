@@ -63,7 +63,6 @@ namespace BlazorTicTacToe.Shared
                 return player;
             }
             return null;
-
         }
 
         public void ChangeRoomMaster(string playerId)
