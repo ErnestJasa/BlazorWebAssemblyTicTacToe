@@ -66,7 +66,6 @@
 </secton>
 
 
-
 @code {
     private HubConnection? hubConnection;
     public string? myPlayerId;
@@ -94,6 +93,7 @@
         await hubConnection.StartAsync();
         myPlayerId = hubConnection.ConnectionId;
     }
+
 
     private async Task CreateRoom()
     {

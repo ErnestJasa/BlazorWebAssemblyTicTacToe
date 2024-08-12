@@ -1,4 +1,4 @@
-﻿
+﻿@inject IJSRuntime JSRuntime
 <article>
     <h3 class="text-xl mx-3">Chat: </h3>
     <form class="flex mt-2" @onsubmit="SendChatMessage">
@@ -7,7 +7,7 @@
     </form>
     @if (Messages.Count() > 0)
     {
-        <div class="mt-3 bg-white/[0.05] mx-2 rounded-lg shadow-lg border-t border-black rounded-t-lg shadow-black/[0.5] max-h-80 overflow-auto scrollbar-hide">
+        <div @ref="MessagesEl" class="mt-3 bg-white/[0.05] mx-2 rounded-lg shadow-lg border-t border-black rounded-t-lg shadow-black/[0.5] max-h-80 break-words text-right overflow-y-auto scrollbar-hide">
             @for (int i = 0; i < Messages.Count(); i++)
             {
                 var message = Messages[i];
@@ -54,10 +54,9 @@
     public string MyPlayerId { get; set; } = string.Empty;
     [Parameter]
     public string? RoomId { get; set; } = "Lobby";
-
     private string messageInput = string.Empty;
-
     private List<ChatMessage> Messages = new();
+    ElementReference MessagesEl;
 
     protected override async Task OnInitializedAsync()
     {
@@ -68,8 +67,9 @@
         }
         HubConnection.On<List<ChatMessage>>(ConnectionStrings.ReceiveMessage, newMessages =>
         {
-            Messages = newMessages;
+            Messages = newMessages;            
             StateHasChanged();
+            JSRuntime.InvokeVoidAsync("ScrollChat", MessagesEl);
         });
     }
 

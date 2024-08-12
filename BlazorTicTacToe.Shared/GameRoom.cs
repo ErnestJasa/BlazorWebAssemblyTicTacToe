@@ -46,7 +46,7 @@ namespace BlazorTicTacToe.Shared
             return false;
         }
 
-        public Player? TryRemovePlayer(string playerId)
+        public bool TryRemovePlayer(string playerId)
         {
             var player = Players.FirstOrDefault(x => x.ConnectionId == playerId);
             if (player != null)
@@ -60,9 +60,9 @@ namespace BlazorTicTacToe.Shared
                     Game.PlayerXId = playerStillInRoom.ConnectionId;
                     ChangeRoomMaster(Game.PlayerXId);
                 }
-                return player;
+                return true;
             }
-            return null;
+            return false;
         }
 
         public void ChangeRoomMaster(string playerId)

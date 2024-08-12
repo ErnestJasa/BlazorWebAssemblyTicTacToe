@@ -44,16 +44,15 @@ namespace BlazorTicTacToe.Hubs
                 {
                     if (room.Players.Count() > 1)
                     {
-                        var playerToRemove = room.TryRemovePlayer(playerId);
-                        if (playerToRemove is not null)
+                        //var playerToRemove = room.TryRemovePlayer(playerId);
+                        if (room.TryRemovePlayer(playerId))
                         {
                             Console.WriteLine("Player disconnected " + playerId);
-                            await Groups.RemoveFromGroupAsync(playerToRemove.ConnectionId, room.RoomId);
-                            await Groups.RemoveFromGroupAsync(playerToRemove.ConnectionId, room.RoomId);
+                            await Groups.RemoveFromGroupAsync(playerId, room.RoomId);
+                            await Groups.RemoveFromGroupAsync(playerId, room.RoomId);
                             await Clients.Group(room.RoomId).SendAsync(ConnectionStrings.UpdateGame, room);
                             await Clients.Group("Lobby").SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
                         }
-
                     }
                     else
                     {

@@ -14,6 +14,15 @@
 <body class="min-w-screen min-h-screen">
     <Routes />
     <script src="_framework/blazor.web.js"></script>
+    <script>
+        function ScrollChat(chatElement){
+            const {scrollHeight, clientHeight} = chatElement;
+            chatElement.scrollTo({
+                left:0, top: scrollHeight - clientHeight,
+                behavior: 'smooth'
+            });
+        }
+    </script>
 </body>
 
 </html>
