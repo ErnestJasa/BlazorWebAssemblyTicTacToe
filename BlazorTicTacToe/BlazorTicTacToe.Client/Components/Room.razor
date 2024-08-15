@@ -1,10 +1,10 @@
 ﻿@if (CurrentRoom is not null)
 {
-    <div class="h-full flex flex-col mt-2 mx-auto">
-
-
-        <h3 class="text-xl text-center font-semibold">Welcome to room @CurrentRoom.RoomName</h3>
-        <div class="mb-auto mt-2 text-lg text-center">
+    <div class="flex flex-col mt-2 mx-2">
+        <h3 class="text-xl text-center font-semibold">
+            Welcome to room @CurrentRoom.RoomName
+        </h3>
+        <div class="mt-2 text-lg text-center mb-6">
             @if (CurrentRoom.Players.Count() < 2)
             {
                 <h4 class="">Waiting for another player to join...</h4>
@@ -15,7 +15,9 @@
             }
             @if (CurrentRoom.Game.GameOver && !CurrentRoom.Game.IsDraw)
             {
-                <h4>Game over! Winner: @CurrentRoom.Game.Winner</h4>
+                <h4 class="font-bold text-yellow-600">
+                    Game over! Winner: @CurrentRoom.Game.Winner
+                </h4>
             }
             @if (CurrentRoom.Game.GameOver && CurrentRoom.Game.IsDraw)
             {
@@ -26,46 +28,61 @@
                 <h4>Its @CurrentRoom.Game.CurrentPlayerSymbol's turn</h4>
 
             }
+
         </div>
 
-        <div class="my-auto">
 
+
+        <div class="">
             @if ((!CurrentRoom.Game.GameStarted || CurrentRoom.Game.GameOver) &&
            CurrentRoom.RoomMasterId == MyPlayerId && CurrentRoom.Players.Count() == 2)
             {
-                <div class="text-center mb-32">
-                    <button class="border border-black rounded-lg px-4 p-1 hover:bg-white/[0.2] text-lg" @onclick="StartGame">Start Game</button>
+                <div class="text-center my-4">
+                    <button class="border border-black rounded-lg px-4 p-1 hover:bg-white/[0.2] text-lg xl:text-2xl" @onclick="StartGame">
+                        Start Game
+                    </button>
                 </div>
             }
-
-
             @if (CurrentRoom.Game.GameStarted)
             {
-                <Board GameBoard="CurrentRoom.Game.Board" MakeMove="async (row, col) => await MakeMove(row, col)" />
+                <div class="mb-2 font-bold text-center">
+                    @if (!IsMyTurn() && !CurrentRoom.Game.GameOver && CurrentRoom.Game.GameStarted)
+                    {
+                        <p>Waiting for other player to make a move</p>
+                    }
+                    else if (IsMyTurn() && !CurrentRoom.Game.GameOver && CurrentRoom.Game.GameStarted)
+                    {
+                        <p>It's your turn!</p>
+                    }
+                </div>
+                <div class="flex justify-center mt-6">
+                    <Board GameBoard="CurrentRoom.Game.Board" MakeMove="async (row, col) => await MakeMove(row, col)" />
+                </div>
             }
-            @if (!IsMyTurn() && !CurrentRoom.Game.GameOver && CurrentRoom.Game.GameStarted)
+        </div>
+        <div class="my-8 mx-auto w-full md:w-[350px]">
+            @foreach (var player in CurrentRoom.Players)
             {
-                <p>Waiting for other player to make a move</p>
-            }
-
-            <div class="my-4">
-                @foreach (var player in CurrentRoom.Players)
-                {
-                    <h5 class="grid grid-cols-4 items-center">
-                        <span class="">
-                            @player.Name
-                        </span>
-                        <span class=" min-w-5 text-left ">(@player.Symbol)</span>
-                        @if (ImRoomMaster())
+                <h5 class="grid gap-3 grid-cols-5 items-center border-t border-black py-2">
+                    <span class="col-span-2 max-w-36 break-all text-wrap">
+                        @player.Name
+                    </span>
+                    <span class="min-w-5 text-left">
+                        (@player.Symbol)
+                    </span>
+                    @if (ImRoomMaster())
+                    {
+                        if (player.ConnectionId != MyPlayerId)
                         {
-                            if (player.ConnectionId != MyPlayerId)
-                            {
-                                <button class="text-center col-span-2 px-2 border border-black rounded-full hover:bg-white/[0.1]" @onclick="()=> ChangeRoomMaster(player.ConnectionId)">Give Master</button>
-                            }
+                            <button class="text-center col-span-2 px-2 border border-black rounded-full hover:bg-white/[0.1]" @onclick="()=> ChangeRoomMaster(player.ConnectionId)">
+                                Give Master
+                            </button>
                         }
-                    </h5>
-                }
-            </div>
+                    }
+                </h5>
+            }
+        </div>
+        <div class="lg:absolute lg:left-5 lg:w-72 lg:top-[25%] xl:w-96 xl:top-[22%] 2xl:w-[450px] 2xl:top-[18%] 2xl:left-32">
             <Chat HubConnection="HubConnection" MyPlayerId="@MyPlayerId" MyPlayerName="@MyPlayerName" RoomId="@CurrentRoom.RoomId" />
         </div>
     </div>

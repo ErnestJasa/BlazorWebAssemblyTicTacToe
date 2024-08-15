@@ -87,7 +87,6 @@ $RECYCLE.BIN/
 *.pf
 
 # Web server publish directory
-wwwroot/
 
 # Node.js dependencies
 node_modules/
@@ -134,7 +133,6 @@ paket-files/
 
 # ASP.NET Core SignalR
 logs
-wwwroot/lib
 
 # Ignore .NET Core generated files
 project.lock.json

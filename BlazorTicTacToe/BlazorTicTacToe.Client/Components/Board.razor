@@ -1,17 +1,17 @@
-﻿<table class="tic-tac-toe">
-
+﻿<table>
     @for (int row = 0; row < 3; row++)
     {
-        <tr>
+        <tr class="">
             @for (int col = 0; col < 3; col++)
             {
                 int r = row;
                 int c = col;
-                <td @onclick="()=> MakeMove(r, c)">@GameBoard[r][c]</td>
+                <td class="w-[95px] h-[95px] sm:w-[115px] sm:h-[115px] hover:bg-black/[0.35] cursor-pointer border border-white/[0.35] text-center align-middle text-4xl font-bold" @onclick="()=> MakeMove(r, c)">@GameBoard[r][c]</td>
             }
         </tr>
     }
 </table> 
+
 @code {
     [Parameter]
     public List<List<string>>? GameBoard { get; set; }

@@ -1,4 +1,3 @@
-using BlazorTicTacToe.Client.Pages;
 using BlazorTicTacToe.Components;
 using BlazorTicTacToe.Hubs;
 using Microsoft.AspNetCore.ResponseCompression;
@@ -33,7 +32,7 @@ else
     app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseStaticFiles();
 app.UseAntiforgery();

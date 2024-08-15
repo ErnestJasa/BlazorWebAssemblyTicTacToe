@@ -1,9 +1,5 @@
-﻿using BlazorTicTacToe.Client.Components;
-using BlazorTicTacToe.Shared;
+﻿using BlazorTicTacToe.Shared;
 using Microsoft.AspNetCore.SignalR;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Timers;
 
 namespace BlazorTicTacToe.Hubs
 {
@@ -21,17 +17,6 @@ namespace BlazorTicTacToe.Hubs
 
             await Clients.Caller.SendAsync(ConnectionStrings.Rooms, _rooms.OrderBy(r => r.RoomName));
             await Groups.AddToGroupAsync(Context.ConnectionId, "Lobby");
-
-            Process currentProcess = Process.GetCurrentProcess();
-            long privateMemory = currentProcess.PrivateMemorySize64;
-            long workingSet = currentProcess.WorkingSet64;
-            long pagedMemory = currentProcess.PagedMemorySize64;
-            long virtualMemory = currentProcess.VirtualMemorySize64;
-
-            Console.WriteLine($"Private Memory: {privateMemory / 1024 / 1024} MB");
-            Console.WriteLine($"Working Set: {workingSet / 1024 / 1024} MB");
-            Console.WriteLine($"Paged Memory: {pagedMemory / 1024 / 1024} MB");
-            Console.WriteLine($"Virtual Memory: {virtualMemory / 1024 / 1024} MB");
         }
 
         public override async Task OnDisconnectedAsync(Exception? exception)
@@ -44,7 +29,6 @@ namespace BlazorTicTacToe.Hubs
                 {
                     if (room.Players.Count() > 1)
                     {
-                        //var playerToRemove = room.TryRemovePlayer(playerId);
                         if (room.TryRemovePlayer(playerId))
                         {
                             Console.WriteLine("Player disconnected " + playerId);
@@ -70,7 +54,7 @@ namespace BlazorTicTacToe.Hubs
 
         public async Task<GameRoom?> CreateRoom(string roomName, string playerName)
         {
-            if (_rooms.Count() >= 4)
+            if (_rooms.Count() >= 100)
             {
                 return null;
             }
@@ -109,7 +93,6 @@ namespace BlazorTicTacToe.Hubs
                     return room;
                 }
             }
-
             return null;
         }
 
@@ -154,7 +137,6 @@ namespace BlazorTicTacToe.Hubs
         public async Task MessageSender(string senderId, string senderName, string message, string roomId)
         {
             ChatMessage newChatmessage = new ChatMessage(senderId, senderName, message);
-            Console.WriteLine(newChatmessage?.SenderName + " " + newChatmessage?.MessageContent + " " + roomId);
 
             if (!_messagesInRooms.Keys.Contains(roomId))
             {

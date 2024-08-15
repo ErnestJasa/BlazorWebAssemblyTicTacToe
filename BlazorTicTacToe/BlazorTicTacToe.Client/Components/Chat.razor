@@ -1,23 +1,19 @@
 ﻿@inject IJSRuntime JSRuntime
-<article>
-    <h3 class="text-xl mx-3">Chat: </h3>
-    <form class="flex mt-2" @onsubmit="SendChatMessage">
-        <input class="p-2  bg-inherit peer focus:border-[#998C3A] focus:outline-none rounded-l-xl border border-black ml-2" type="text" @bind="messageInput" />
-        <button class="px-2 hover:bg-white/25 active:bg-white/25 peer-focus:border-[#998C3A] rounded-r-xl border border-black" type="submit">Send</button>
-    </form>
+<div class="w-full">
+    <h3 class="text-xl sm:mx-1">Chat: </h3>
     @if (Messages.Count() > 0)
     {
-        <div @ref="MessagesEl" class="mt-3 bg-white/[0.05] mx-2 rounded-lg shadow-lg border-t border-black rounded-t-lg shadow-black/[0.5] max-h-80 break-words text-right overflow-y-auto scrollbar-hide">
+        <div @ref="MessagesEl" class="my-3 bg-white/[0.05] rounded-lg shadow-lg border-t border-black rounded-t-lg shadow-black/[0.5] max-h-80 xl:max-h-96 break-all overflow-y-auto scrollbar-hide">
             @for (int i = 0; i < Messages.Count(); i++)
             {
                 var message = Messages[i];
                 if (i == 0)
                 {
-                    <div class=" flex flex-col border-x border-black  p-1">
+                    <div class="flex flex-col border-x border-black p-1">
                         <h4 class="text-lg px-2 p-1 bg-black/[0.3] mr-auto rounded-xl">
                             @message.SenderName
                         </h4>
-                        <p class="ml-auto mr-1">
+                        <p class="text-left mx-2 mt-[2px]">
                             @message.MessageContent
                         </p>
                     </div>
@@ -25,11 +21,11 @@
                 }
                 else if (Messages?[i - 1].SenderId != message.SenderId)
                 {
-                    <div class=" flex flex-col border-x border-t border-black  p-1">
+                    <div class="flex flex-col border-x border-t border-black p-1">
                         <h4 class="text-lg px-2 p-1 bg-black/[0.3] mr-auto rounded-xl">
                             @message.SenderName
                         </h4>
-                        <p class="ml-auto mr-1">
+                        <p class="text-left mx-2 mt-[2px]">
                             @message.MessageContent
                         </p>
                     </div>
@@ -37,13 +33,19 @@
                 else
                 {
                     <div class="flex p-1 border-x border-black">
-                        <p class="ml-auto mr-1">@message.MessageContent</p>
+                        <p class="text-left mx-2 mt-[2px]">
+                            @message.MessageContent
+                        </p>
                     </div>
                 }
             }
         </div>
     }
-</article>
+    <form class="flex mt-4 w-full" @onsubmit="SendChatMessage">
+        <input placeholder="Enter chat message..." class="w-full p-2 bg-inherit peer focus:border-[#998C3A] focus:outline-none rounded-l-xl border border-black" type="text" @bind="messageInput" />
+        <button class="px-2 hover:bg-white/25 active:bg-white/25 peer-focus:border-[#998C3A] rounded-r-xl border border-black" type="submit">Send</button>
+    </form>
+</div>
 
 @code {
     [Parameter]
@@ -62,12 +64,11 @@
     {
         if (HubConnection is null)
         {
-            Console.WriteLine("hubconnection is null at chat component");
             return;
         }
         HubConnection.On<List<ChatMessage>>(ConnectionStrings.ReceiveMessage, newMessages =>
         {
-            Messages = newMessages;            
+            Messages = newMessages;
             StateHasChanged();
             JSRuntime.InvokeVoidAsync("ScrollChat", MessagesEl);
         });
